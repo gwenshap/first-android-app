@@ -30,14 +30,29 @@ public class DisplayMessageActivity extends AppCompatActivity {
 
         // Get the Intent that started this activity and extract the string
         Intent intent = getIntent();
-        String message = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
+        String action = intent.getAction();
+        String type = intent.getType();
+
+        String message = "";
 
         // Capture the layout's TextView and set the string as its text
         final TextView textView = findViewById(R.id.textView);
-        textView.setText(message);
+
+        if (Intent.ACTION_SEND.equals(action) && type != null) {
+            if ("text/plain".equals(type)) {
+                message = intent.getStringExtra(Intent.EXTRA_TEXT);
+            }
+        } else {
+            // Handle other intents, such as being started from the home screen
+            message = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
+        }
+
+        if (message == null) {
+            textView.setText("No message sent - either no message or a type that we don't handle like an image or video");
+            return;
+        }
 
         // Instantiate the RequestQueue.
-
         String url ="https://8apenlf7fe.execute-api.us-east-1.amazonaws.com/default/infuDroidBackend";
         queue = Volley.newRequestQueue(this);
 
@@ -78,10 +93,12 @@ public class DisplayMessageActivity extends AppCompatActivity {
 
         request.setTag(TAG);
 
-
-// Add the request to the RequestQueue.
+        // Add the request to the RequestQueue.
         queue.add(request);
+
+        textView.setText("Message: " + message + " was sent");
     }
+
 
     @Override
     protected void onStop () {
